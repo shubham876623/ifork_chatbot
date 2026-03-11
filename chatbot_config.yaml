@@ -15,9 +15,10 @@ chunk_overlap: 80
 retrieve_top_k: 5
 
 # After submitting a quote to HubSpot
-thank_you_message: "Thanks for your enquiry. We'll be in touch within 24 hours."
+thank_you_message: "Thanks for your enquiry. We'll be in touch soon. Is there anything else I can help you with?"
 
 # HubSpot – qualified chatbot leads created with Lead Source = "Chatbot" (and Lead Status = OPEN)
 hubspot_enabled: true
 hubspot_lead_source: "Chatbot"
 hubspot_lead_status: "OPEN"
+# Optional (local only): hubspot_access_token: "pat-..." — on Vercel use env var HUBSPOT_ACCESS_TOKEN instead
