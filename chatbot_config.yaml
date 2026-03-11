@@ -1,0 +1,22 @@
+# iFork Chatbot – config (env vars override: OPENAI_API_KEY, HUBSPOT_ACCESS_TOKEN)
+
+# Paths (relative to project root)
+knowledge_base_path: "ifork_chatbot_knowledge_base.md"
+chroma_persist_dir: "chroma_ifork"
+
+# OpenAI
+embedding_model: "text-embedding-3-small"
+chat_model: "gpt-4o-mini"
+
+# RAG
+chunk_size: 500
+chunk_overlap: 80
+retrieve_top_k: 5
+
+# After submitting a quote to HubSpot
+thank_you_message: "Thanks for your enquiry. We'll be in touch within 24 hours."
+
+# HubSpot – qualified chatbot leads created with Lead Source = "Chatbot" (and Lead Status = OPEN)
+hubspot_enabled: true
+hubspot_lead_source: "Chatbot"
+hubspot_lead_status: "OPEN"
