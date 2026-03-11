@@ -2,7 +2,8 @@
 
 # Paths (relative to project root)
 knowledge_base_path: "ifork_chatbot_knowledge_base.md"
-chroma_persist_dir: "chroma_ifork"
+chroma_persist_dir: "chroma_ifork"   # EC2/local: Chroma index
+embeddings_json_path: "embeddings.json"  # Vercel: pre-built JSON (no Chroma at runtime)
 
 # OpenAI
 embedding_model: "text-embedding-3-small"

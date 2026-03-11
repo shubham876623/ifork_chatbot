@@ -1,31 +1,33 @@
 # iFork Chatbot
 
-RAG + FastAPI backend for the iFork Mackay chat widget.
+RAG + FastAPI backend for the iFork Mackay chat widget. Two deployment options:
 
-**Deployment:** Use **EC2** (or Railway, Render, Fly.io) — not Vercel. ChromaDB and its dependencies exceed Vercel’s serverless bundle size limit (~250 MB).
+- **Vercel:** uses pre-built `embeddings.json` (no Chroma at runtime, small bundle).
+- **EC2:** uses Chroma (`chroma_ifork/`) for RAG. Client can move to EC2 later.
 
-## Deploy on EC2 (or similar)
+---
 
-1. **Server:** Launch an EC2 instance (or other VM), install Python 3.10+.
+## Deploy on Vercel (embeddings.json)
 
-2. **Clone and install:**
-   ```bash
-   git clone https://github.com/shubham876623/ifork_chatbot.git
-   cd ifork_chatbot
-   pip install -r requirements.txt
-   ```
+1. Connect this repo in [Vercel](https://vercel.com) → New Project → Import.
+2. **Install command** is set in `vercel.json` to `pip install -r requirements-vercel.txt` (no Chroma, keeps bundle under 250 MB).
+3. Set env vars: `OPENAI_API_KEY`, optional `HUBSPOT_ACCESS_TOKEN`.
+4. Deploy. The API is at `https://your-project.vercel.app` (`GET /health`, `POST /chat`).
+5. Set the widget `API_BASE` to your Vercel URL.
 
-3. **Environment variables** (e.g. in `.env` or `export`):
-   - `OPENAI_API_KEY` – your OpenAI API key (required)
-   - `HUBSPOT_ACCESS_TOKEN` – HubSpot private app token (optional; for creating leads)
+The repo includes a pre-built `embeddings.json`. To regenerate it (e.g. after changing the knowledge base), run locally: `python -m ifork_chatbot.ingest` then `python -m ifork_chatbot.export_embeddings`, or `python -m ifork_chatbot.build_embeddings_from_kb` (no Chroma), then commit the new `embeddings.json`.
 
-4. **Run:**
-   ```bash
-   uvicorn ifork_chatbot.main:app --host 0.0.0.0 --port 8000
-   ```
-   Use a process manager (systemd, supervisord) or reverse proxy (nginx) for production.
+---
 
-5. **Widget:** Set your chat widget’s `API_BASE` to your server URL (e.g. `http://your-ec2-ip:8000` or your domain).
+## Deploy on EC2 (Chroma)
+
+1. Clone the repo, then: `pip install -r requirements.txt` (includes Chroma).
+2. Build Chroma once: `python -m ifork_chatbot.ingest` (creates/updates `chroma_ifork/`).
+3. Set env vars: `OPENAI_API_KEY`, optional `HUBSPOT_ACCESS_TOKEN`.
+4. Run: `uvicorn ifork_chatbot.main:app --host 0.0.0.0 --port 8000`. Use systemd + nginx for production.
+5. Set the widget `API_BASE` to your EC2 URL.
+
+---
 
 ## Local run
 
@@ -40,4 +42,5 @@ Then open `http://localhost:8000/health` and `POST /chat` with body: `{"session_
 
 ## RAG
 
-The `chroma_ifork/` folder is the pre-built vector index. If you change `ifork_chatbot_knowledge_base.md`, run `python -m ifork_chatbot.ingest` and redeploy with the updated `chroma_ifork/`.
+- **Vercel:** RAG uses `embeddings.json` (same behaviour as Chroma).
+- **EC2 / local:** RAG uses `chroma_ifork/`. After editing `ifork_chatbot_knowledge_base.md`, run `python -m ifork_chatbot.ingest` and redeploy; for Vercel also run `export_embeddings` and commit `embeddings.json`.

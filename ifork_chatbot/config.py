@@ -38,6 +38,7 @@ def load_config():
     # Paths
     cfg["knowledge_base_path"] = ROOT / cfg.get("knowledge_base_path", "ifork_chatbot_knowledge_base.md")
     cfg["chroma_persist_dir"] = _chroma_dir_for_vercel()
+    cfg["embeddings_json_path"] = ROOT / cfg.get("embeddings_json_path", "embeddings.json")
 
     # Env overrides
     cfg["openai_api_key"] = (os.environ.get("OPENAI_API_KEY") or "").strip()
