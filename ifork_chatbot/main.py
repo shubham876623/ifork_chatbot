@@ -105,6 +105,12 @@ def chat(req: ChatRequest):
     return ChatResponse(reply=reply, qualified=qualified, collected=collected, hubspot_created=hubspot_created)
 
 
+@app.get("/")
+def root():
+    """Root route so GET / returns 200 (avoids 404 in Vercel logs)."""
+    return {"service": "iFork Chatbot API", "health": "/health", "chat": "POST /chat"}
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
