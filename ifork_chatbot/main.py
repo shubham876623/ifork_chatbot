@@ -20,11 +20,21 @@ _config: dict = {}
 
 
 def _address_from_collected(collected: dict) -> str:
-    """Optional address line for HubSpot (e.g. suburb only). Same contact shape as scraper."""
+    """Optional address line for HubSpot (e.g. suburb only)."""
     suburb = (collected.get("suburb") or "").strip()
     if suburb:
         return f"Mackay region, {suburb}"
     return ""
+
+
+def _message_from_collected(collected: dict) -> str:
+    """Build a message string from quote details (same idea as form 'message' field)."""
+    parts = []
+    for key in ("pallet_count", "timeline", "notes"):
+        v = (collected.get(key) or "").strip()
+        if v:
+            parts.append(f"{key.replace('_', ' ').title()}: {v}")
+    return " | ".join(parts) if parts else ""
 
 
 @asynccontextmanager
@@ -79,9 +89,13 @@ def chat(req: ChatRequest):
     hubspot_created = False
     session = get_session(req.session_id)
     already_submitted = session.get("submitted", False)
-    if qualified and not already_submitted and config.get("hubspot_enabled") and config.get("hubspot_access_token"):
+    has_token = bool((config.get("hubspot_access_token") or "").strip())
+    if not has_token:
+        logger.info("HubSpot: skipped (no hubspot_access_token set; set HUBSPOT_ACCESS_TOKEN on Vercel)")
+    if qualified and not already_submitted and config.get("hubspot_enabled") and has_token:
         first = (collected.get("firstname") or "").strip() or "—"
         last = (collected.get("lastname") or "").strip() or "—"
+        logger.info("HubSpot: creating contact for qualified lead firstname=%s lastname=%s", first[:20], last[:20])
         ok, res = create_contact(
             access_token=config["hubspot_access_token"],
             firstname=first,
@@ -90,6 +104,7 @@ def chat(req: ChatRequest):
             phone=(collected.get("phone") or "").strip(),
             company=(collected.get("company") or "").strip(),
             address=_address_from_collected(collected),
+            message=_message_from_collected(collected),
             lead_source=config.get("hubspot_lead_source", "Chatbot"),
             lead_status=config.get("hubspot_lead_status", "OPEN"),
         )
@@ -101,6 +116,8 @@ def chat(req: ChatRequest):
             logger.warning("HubSpot create failed: %s", res)
     elif qualified and already_submitted:
         reply = config.get("thank_you_message", "Thanks for your enquiry. We'll be in touch within 24 hours.")
+    elif qualified and not has_token:
+        reply = config.get("thank_you_message", "Thanks for your enquiry. We'll be in touch soon. Is there anything else I can help you with?")
 
     return ChatResponse(reply=reply, qualified=qualified, collected=collected, hubspot_created=hubspot_created)
 
